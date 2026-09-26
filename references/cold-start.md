@@ -1,11 +1,13 @@
 # 冷启动初始化手册（新工程）
 
-## 前置硬前提：全局默认 Memory Bank 提示词
-**任何工程开启 memory bank 之前，必须先落全局默认 memory-bank 提示词**（Cline 自定义指令层，所有工程生效）。
-- 提示词全文 = `assets/global-memory-bank-prompt.md`（逐字模板，勿改语义）
-- 来源：用户博客 https://gongdear.com/articles/2026/09/04/1788492620184.html 最后部分“自定义指令（完整版）”；**以该模板文件为准，逐字交给 Cline 写入/落盘**
-- 交付方式：冷启动任务书第一步 = “先在全局自定义指令层写入本文件内容（若已存在则核对一致），再开始工程级初始化”
-- 验证：`~/.cline` 全局配置里已有该提示词（或用户指定位置），六文件结构 `cline_docs/` 约定生效
+## 前置核：全局默认 Memory Bank 提示词（必须先于任何 memory bank 开启确认到位）
+检查 → 引导 → 降级，三步：
+1. **检查**：`grep -riE "记忆库|memory bank" ~/.cline` 找全局自定义指令/配置中的提示词 + `cline_docs` 结构约定；命中且内容完整 → 进入分支
+2. **引导**（未配置时）：推荐用户配到**全局**（跨工程生效）——Cline 设置→自定义指令，粘贴 `assets/global-memory-bank-prompt.md` 全文（面向英文用户/工程给 `global-memory-bank-prompt.en.md`）；给用户明确操作说明后再继续
+3. **降级**（用户暂不配）：**注入模式**——把所选语言版提示词全文直接写进本次任务 prompt 的上下文，**然后再发 `active memory bank`**（顺序固定：先提示词、后激活）
+
+- 提示词全文 = `assets/global-memory-bank-prompt.md`（中文）/ `global-memory-bank-prompt.en.md`（英文），逐字模板勿改语义
+- 来源：用户博客 https://gongdear.com/articles/2026/09/04/1788492620184.html 最后部分“自定义指令（完整版）”
 
 ## 分支 A：全新工程（连代码都没有）
 代码事实为零 → **规则内容只能来自用户**，按 Cline 最佳实践逐维度问齐后让 Cline 落盘。**不要替用户编任何一条**。

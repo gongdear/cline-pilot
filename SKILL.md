@@ -1,7 +1,7 @@
 ---
 name: cline-pilot
 description: "Proxy Cline CLI tasks: dispatch, monitor, relay decisions."
-version: 2.3.1
+version: 2.4.0
 author: gongdear
 license: MIT
 metadata:
@@ -58,7 +58,10 @@ python3 scripts/session_report.py 15 /path/to/repo
 
 ## 冷启动流程（新工程，无 clinerules/memory-bank——先于一切业务任务）
 完整手册见 `references/cold-start.md`，三步骨架：
-1. **前置核**：任何 memory bank 开启前先落**全局默认 memory-bank 提示词**（`assets/global-memory-bank-prompt.md` 逐字内容，写入 Cline 全局自定义指令层；已存在则核对一致）
+1. **前置核（先于任何 memory bank 开启）**：检查全局默认 memory-bank 提示词是否已配置（grep `~/.cline` 全局配置/自定义指令，找 `记忆库`/`Memory Bank` 关键词 + `cline_docs` 结构约定）：
+   - **已配置** → 核对与模板一致后直接进下一步
+   - **未配置** → 推荐用户配置到全局（跨工程生效）：Cline 设置→自定义指令，粘贴 `assets/global-memory-bank-prompt.md`（英文用户/英文工程用 `global-memory-bank-prompt.en.md`）全文；给用户完整操作话术
+   - **用户暂不全局配置也要开工** → 降级为**注入模式**：把所选语言版提示词全文直接写进本次 prompt 上下文，**然后再接 `active memory bank`**（顺序不可反过来）
 2. **两分支初始化**（详见手册）：
    - **A 分支（全新工程，无代码）**：规则内容只能来自用户——按手册清单逐维度问齐（六文件：projectbrief/productContext/techContext/systemPatterns/activeContext/progress），用户没答的标“待确认”，**禁止编造**
    - **B 分支（存量代码）**：Cline 扫描现有代码为基准落规则文件，用户背景信息覆盖时以用户为准，代码看不出且用户没说→标“待确认”
