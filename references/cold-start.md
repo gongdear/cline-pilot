@@ -2,7 +2,7 @@
 
 ## 前置核：全局默认 Memory Bank 提示词（必须先于任何 memory bank 开启确认到位）
 检查 → 引导 → 降级，三步：
-1. **检查**：`grep -riE "记忆库|memory bank" ~/.cline` 找全局自定义指令/配置中的提示词 + `cline_docs` 结构约定；命中且内容完整 → 进入分支
+1. **检查**：`~/.cline` 全局配置中找记忆库提示词 + `cline_docs` 结构约定。推荐的确切检查点（CLI 与 VSCode 插件共用 `~/.cline/data`，一处配置两端生效）：`python3 -c "import json;d=json.load(open('$HOME/.cline/data/globalState.json'));print(d.get('globalClineRulesToggles'))"` —— 值为 `{你的文件.md: true}` 即已配置；再 `head` 该文件确认是 memory-bank 提示词。命中且内容完整 → 进入分支
 2. **引导**（未配置时）：推荐用户配到**全局**（跨工程生效）——Cline 设置→自定义指令，粘贴 `assets/global-memory-bank-prompt.md` 全文（面向英文用户/工程给 `global-memory-bank-prompt.en.md`）；给用户明确操作说明后再继续
 3. **降级**（用户暂不配）：**注入模式**——把所选语言版提示词全文直接写进本次任务 prompt 的上下文，**然后再发 `active memory bank`**（顺序固定：先提示词、后激活）
 
