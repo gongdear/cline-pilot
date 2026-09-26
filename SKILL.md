@@ -1,7 +1,7 @@
 ---
 name: cline-pilot
 description: "Proxy Cline CLI tasks: dispatch, monitor, relay decisions."
-version: 2.4.0
+version: 2.4.1
 author: gongdear
 license: MIT
 metadata:

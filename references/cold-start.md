@@ -2,8 +2,25 @@
 
 ## 前置核：全局默认 Memory Bank 提示词（必须先于任何 memory bank 开启确认到位）
 检查 → 引导 → 降级，三步：
-1. **检查**：`~/.cline` 全局配置中找记忆库提示词 + `cline_docs` 结构约定。推荐的确切检查点（CLI 与 VSCode 插件共用 `~/.cline/data`，一处配置两端生效）：`python3 -c "import json;d=json.load(open('$HOME/.cline/data/globalState.json'));print(d.get('globalClineRulesToggles'))"` —— 值为 `{你的文件.md: true}` 即已配置；再 `head` 该文件确认是 memory-bank 提示词。命中且内容完整 → 进入分支
-2. **引导**（未配置时）：推荐用户配到**全局**（跨工程生效）——Cline 设置→自定义指令，粘贴 `assets/global-memory-bank-prompt.md` 全文（面向英文用户/工程给 `global-memory-bank-prompt.en.md`）；给用户明确操作说明后再继续
+
+**第一步检查（跨 OS 通用，首选）**：CLI 与 VSCode 插件共用 `~/.cline/data`（Windows 为 `%USERPROFILE%\.cline\data`），一处配置两端生效。一行判定：
+```bash
+# macOS / Linux
+python3 -c "import json;d=json.load(open('$HOME/.cline/data/globalState.json'));print(d.get('globalClineRulesToggles'))"
+# Windows (PowerShell)
+python -c "import os,json;d=json.load(open(os.path.expanduser('~/.cline/data/globalState.json')));print(d.get('globalClineRulesToggles'))"
+```
+值为 `{".../memory-bank.md": true}` 即已配置（key 是各 OS 的实际绝对路径）；再 `head`/`Get-Content` 该文件确认是 memory-bank 提示词。命中且内容完整 → 直达分支二/三。
+
+**全局规则目录的默认落点（按 OS 对照）**：
+| OS | 插件默认全局 Rules 目录 | 旧式全局文件（legacy，仍兼容） | HOME 变量 |
+|----|--------------------------|--------------------------------|-----------|
+| macOS / Linux | `~/Documents/Cline/Rules/` | `~/.clinerules` | `$HOME` |
+| Windows | `%USERPROFILE%\Documents\Cline\Rules\` | `%USERPROFILE%\.clinerules` | `%USERPROFILE%` |
+
+检测顺序：先查注册表（上）；未命中再 `ls` 上述两个落点有无 memory-bank 提示词文件（有文件但 toggle 未开 = 配了没勾，引导用户打开）；都没有 = 未配置 → 第二步引导。
+
+2. **引导**（未配置时）：推荐用户配到**全局**（跨工程生效）——Cline 设置→自定义指令/Rules，粘贴 `assets/global-memory-bank-prompt.md` 全文（面向英文用户/工程给 `global-memory-bank-prompt.en.md`）；文件落点对应上表 OS 行；给用户明确操作说明后再继续
 3. **降级**（用户暂不配）：**注入模式**——把所选语言版提示词全文直接写进本次任务 prompt 的上下文，**然后再发 `active memory bank`**（顺序固定：先提示词、后激活）
 
 - 提示词全文 = `assets/global-memory-bank-prompt.md`（中文）/ `global-memory-bank-prompt.en.md`（英文），逐字模板勿改语义
