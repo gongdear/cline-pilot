@@ -1,7 +1,7 @@
 ---
 name: cline-pilot
 description: "Proxy Cline CLI tasks: dispatch, monitor, relay decisions."
-version: 0.2.4
+version: 0.2.5
 author: gongdear
 license: MIT
 metadata:
@@ -48,13 +48,13 @@ prompt 里**写死验收标准 + commit 规范 + 禁止项**（非交互无会�
 **模式 2：TUI 交互（仅短任务+需实时批准）**：`cline -i` + pty。
 实测陷阱：文本可写入，但**多行编辑器的单发回车提交不可靠**；非预期键可能弹订阅页（任意键关闭）。超过两三句的内容一律用模式 1。
 
-## 监控（确定性脚本优先）
-长任务后台跑时，优先跑 `scripts/session_report.py`（读会话消息流 + git/surefire 硬证据）：
+3. 监控（确定性脚本优先）
+长任务后台跑时，优先跑 `scripts/session_report.py`（读会话消息流 + git/测试报告硬证据）：
 ```bash
 python3 scripts/session_report.py            # 最新会话 + 当前目录证据
 python3 scripts/session_report.py 15 /path/to/repo
 ```
-原则：**不信 Cline 自述，只信最终态证据**（git status/diff、surefire 数字、报告文件非空）。其次才看 PTY 输出。
+原则：**不信 Cline 自述，只信最终态证据**（git status/diff、构建工具测试报告数字、产物文件非空）。其次才看 PTY 输出。具体构建/测试/覆盖率工具由工程画像决定（见 `references/project-profiles.md`），本技能不假设任何语言或栈。
 
 ## 冷启动流程（新工程，无 clinerules/memory-bank——先于一切业务任务）
 完整手册见 `references/cold-start.md`，三步骨架：
@@ -81,8 +81,8 @@ Cline 建议：X（理由）
 ## 验收清单（全绿才报完成）
 - [ ] `git status` / `diff --stat`：改动与声称一致、无越界文件
 - [ ] `git log -1`：commit 规范（含约定尾部）且**未 push**
-- [ ] 自己重跑关键命令（如 `mvn -pl <m> test`），对 surefire 数字
-- [ ] 覆盖率任务：读 jacoco/surefire 报告里的真实百分比
+- [ ] 自己重跑该工程的测试/构建命令（命令形式见工程画像/任务书，不同栈不同工具），读原始测试报告数字
+- [ ] 覆盖率任务：读覆盖率工具报告里的真实百分比（没跑就说没跑，禁止编造）
 - [ ] 报告/产物存在且非空（`wc -l` + 抽样首尾）
 - [ ] 临时工作区残留已清理（worktree + prune），或列入待办
 
@@ -106,7 +106,7 @@ Cline 建议：X（理由）
 6. 同一工程别 CLI 与代管两端同时推进会话——`~/.cline` 数据共享但运行时不共享
 7. 慢任务不要 kill——先 `session_report.py` + poll 确认在工作
 8. **`Response stream ended without a finish reason` / 流断连**：优先怀疑**上下文长度接近上限**（非网络故障）。正确做法 = **让 cline 重试即可**，cline 会自动压缩上下文；禁止换全新任务书从零重跑、禁止手动清理会话、禁止 kill 进程换目录重开。非交互模式：再发一条简短继续提示（以磁盘现状为准盘点）；TUI：直接让它继续
-9. **`operation timed out` 但迭代数很多**：多为单步长操作（全仓 mvn / 大批量写入）触发，不是进程挂死；任务书加单步上限（每命令 ≤300s、禁止全仓一次跑）；同样续跑不重跑
+9. **`operation timed out` 但迭代数很多**：多为单步长操作（全仓级构建测试/大批量写入）触发，不是进程挂死；任务书加单步上限（每命令 ≤300s、禁止一次性跑全仓级命令）；同样续跑不重跑
 
 ## Rules
 1. 首句固定 `active memory bank`（写进 prompt 首部）
@@ -116,6 +116,6 @@ Cline 建议：X（理由）
 5. 冷启动（无 clinerules/memory-bank 的新工程）：先按“冷启动流程”完成初始化并汇报，**然后停下等指令，不顺手接业务任务**
 6. 硬约束（永远先问用户）：push / 删文件删目录 / 写数据库 / 装软件升级 / 花钱 / 改全局配置与密钥
 7. 结束后：新纠偏入 decision-log，够 2 次一致蒸馏进偏好区
-8. **后台进程台账（铁律，用户 2026-09-26 定，用本skill拉起的任何后台进程必须遵守）**：登记是**启动流程的一部分**，不是事后补记——顺序是：`启动前建台账行(pid待填)` → `启动后30s内回填真实pid/会话id` → `退出/结束/被kill时更新状态列`。**未登记 = 未启动**（禁止先启后补）。台账单文件：`~/.hermes/cache/scratch/bg-procs.md`（追加式，历史不清）：一行一条 `时间 | pid(含伴随daemon) | 会话id | 目的 | 状态`。**查杀决策清单**（kill 前逐项过）：①目的列写明在干什么 → ②会话 `~/.cline/data/sessions/<id>` 最后活动时间是否已结束 → ③是否还有 nohup 子进程（mvn等）挂在其下未跑完 → ④是孤儿 daemon 还是活跃会话配套（比对 `--cwd` + 启动时间）。四项都确认无活活体才 kill。特别地：**每个 cline 会话会自带一个 `cline-hub-daemon --cwd <工程>`（孤儿化到 launchd，会话结束后可能残留）** —— 活跃会话的 daemon 绝不可杀
-9. **`session not found` 崩溃（实测 2026-09-26）**：每个 cline 会话带一个 `cline-hub-daemon`（孤儿化到 launchd）；daemon 重启/被杀后 hub 会话注册表丢失，运行中会话直接崩。处置：先清 daemon 再启新会话开新对话；崩溃前已挂出的 nohup 子进程（如 mvn）会独立存活，先等其跑完再盘点。
-10. 写任务书前必查 `references/project-profiles.md` 该工程的**工程级特殊要求**并逐条显式写进任务书（如 ForIM：禁止并行 worktree 多任务、逐模块串行；单步命令 ≤300s）。工程级约束优先级高于本技能通用流程——并行/子代理等通用行为若与工程约束冲突，**以工程约束为准**
+8. **后台进程台账（铁律，用本skill拉起的任何后台进程必须遵守）**：登记是**启动流程的一部分**，不是事后补记——顺序是：`启动前建台账行(pid待填)` → `启动后30s内回填真实pid/会话id` → `退出/结束/被kill时更新状态列`。**未登记 = 未启动**（禁止先启后补）。台账单文件：`~/.hermes/cache/scratch/bg-procs.md`（追加式，历史不清）：一行一条 `时间 | pid(含伴随daemon) | 会话id | 目的 | 状态`。**查杀决策清单**（kill 前逐项过）：①目的列写明在干什么 → ②会话 `~/.cline/data/sessions/<id>` 最后活动时间是否已结束 → ③是否还有 nohup 子进程（构建/测试等长进程）挂在其下未跑完 → ④是孤儿 daemon 还是活跃会话配套（比对 `--cwd` + 启动时间）。四项都确认无活体才 kill。**每个 cline 会话会自带一个 `cline-hub-daemon --cwd <工程>`（孤儿化到系统进程管理器，会话结束后可能残留）**——活跃会话的 daemon 绝不可杀
+9. **`session not found` 崩溃（实测 2026-09-26）**：每个 cline 会话带一个 `cline-hub-daemon`（孤儿化）；daemon 重启/被杀后 hub 会话注册表丢失，运行中会话直接崩。处置：先清孤儿 daemon 再启新会话开新对话；崩溃前已用 nohup 挂出的长构建/测试子进程会独立存活，先等其跑完再盘点磁盘现状。
+10. **写任务书前必查 `references/project-profiles.md`（私有）该工程的工程级特殊要求**并逐条显式写进任务书（例：并发模型限制、串行推进要求、单步命令时长上限等）。工程级约束优先级高于本技能通用流程——并行/子代理等通用行为若与工程约束冲突，**以工程约束为准**。本技能全局规则只写通用机制，**不写任何具体工程、语言、栈相关的值**——那些归口 private references（project-profiles / local-config）

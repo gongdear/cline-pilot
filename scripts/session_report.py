@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
-"""session_report.py — summarize a Cline session + hard engineering evidence. / Cline 会话活动摘要 + 工程进度硬证据
+"""session_report.py — Cline 会话活动摘要 + 工程进度硬证据。
 
-Usage / 用法:
-  python3 session_report.py                # latest session, last 10 msgs, cwd evidence / 最新会话最近10条+当前目录证据
-  python3 session_report.py 15 /path/to/repo
+用法:
+  python3 session_report.py                # 最新会话 10 条 + 当前目录证据
+  python3 session_report.py 15             # 最近 15 条
+  python3 session_report.py /path/to/repo  # 指定工程目录（自动识别 sid 或路径）
 
-Output / 输出:
-  - recent messages of the session (role / text / tool / result summary)
-    会话最近消息（角色 / 文本 / 工具调用 / 结果摘要）
-  - hard repo evidence: branch, git status, last commit, newest surefire report lines
-    工程硬证据：分支、git status、最近 commit、最新 surefire 报告首行
-
-Read-only — never modifies files. stdlib only. / 只读，不改任何文件；仅标准库。
+输出:
+  - 会话最近 N 条消息（role / text / tool / 结果摘要）
+  - 工程硬证据：分支、git status、最近 commit、最新测试报告首行（多栈：Maven surefire / JUnit-xml / pytest 等）
+    输出 / output: branch, git status, last commit, newest test-report lines (stack-agnostic)
+只读操作，不改任何文件。stdlib only。
 """
 import glob
 import json
@@ -24,7 +23,6 @@ SESSIONS_ROOT = os.path.join(os.path.expanduser("~"), ".cline", "data", "session
 
 
 def latest_session_id():
-    """Return the most recently modified Cline session directory name. / 返回最近更新的 Cline 会话目录名。"""
     if not os.path.isdir(SESSIONS_ROOT):
         return None
     entries = []
@@ -45,7 +43,6 @@ def load_session(sid):
 
 
 def summarize(msgs, n):
-    """Flatten the last N messages into readable one-line entries. / 把最近 N 条消息展平成可读的逐行摘要。"""
     lines = []
     for m in (msgs or [])[-n:]:
         role = m.get("role", "?")
@@ -79,8 +76,17 @@ def sh(cmd, cwd):
         return "(error %s)" % e
 
 
+# 多栈测试报告候选（按优先级）/ multi-stack test-report candidate patterns
+REPORT_GLOBS = [
+    "**/target/surefire-reports/*.txt",   # Maven/JUnit
+    "**/junit-xml/TEST-*.xml",             # Node (vitest/jest jasmine2)
+    "**/build/test-results/test/*.xml",   # Kotlin/Gradle
+    "**/.pytest_cache/v/cache/lastfailed", # pytest
+    "**/coverage/*.html",                  # 覆盖率产物兜底
+]
+
+
 def repo_evidence(root):
-    """Collect hard evidence: branch / status / commit / newest surefire lines. / 收集硬证据：分支、状态、commit、最新 surefire 报告行。"""
     if not os.path.exists(os.path.join(root, ".git")) and not os.path.isdir(os.path.join(root, ".git")):
         try:
             r = subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=root, capture_output=True, text=True, timeout=20)
@@ -94,19 +100,22 @@ def repo_evidence(root):
         "status   : %s" % (sh("git status --short | head -15", root) or "(clean)"),
         "commit   : %s" % sh("git log -1 --pretty='%h %s'", root),
     ]
-    reports = sorted(
-        glob.glob(os.path.join(root, "**", "target", "surefire-reports", "*.txt"), recursive=True),
-        key=lambda p: os.path.getmtime(p), reverse=True,
-    )[:6]
-    for f in reports:
+    recent = []
+    for pat in REPORT_GLOBS:
+        hits = glob.glob(os.path.join(root, pat), recursive=True)
+        if hits:
+            recent.extend(hits)
+            break
+    recent = sorted(recent, key=lambda p: os.path.getmtime(p), reverse=True)[:6]
+    for f in recent:
         try:
             with open(f, encoding="utf-8", errors="replace") as fh:
                 first = fh.readline().strip()
-            lines.append("surefire : %s | %s" % (os.path.relpath(f, root), first))
+            lines.append("tests    : %s | %s" % (os.path.relpath(f, root), first[:140]))
         except OSError:
             pass
-    if not reports:
-        lines.append("surefire : (no reports yet)")
+    if not recent:
+        lines.append("tests    : (no test reports found / 未找到测试报告)")
     return lines
 
 
