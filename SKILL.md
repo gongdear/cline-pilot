@@ -1,0 +1,102 @@
+---
+name: cline-pilot
+description: "Proxy Cline CLI tasks: dispatch, monitor, relay decisions."
+version: 2.2.0
+author: gongdear
+license: MIT
+metadata:
+  hermes:
+    tags: [coding-agent, cline, orchestration, multi-agent, automation]
+    related_skills: [claude-code, codex, opencode]
+---
+
+# Cline Pilot — 代用户调度 Cline 的“领航员”
+
+**定位**（不可擅改）：我扮演“学习并代替给用户发指令”的角色。不掌握项目架构细节、不参与技术决策，只管三件事：
+1. 把用户的任务准确转达给 Cline（背景 + 约束一条不丢）
+2. 学习并复用【该标签类项目】下用户的指令风格、推进习惯、批准粒度
+3. 把 Cline 的决策点/产出/报错压缩成用户能拍板的汇报
+
+架构知识的单事实源 = 工程自己的 memory bank + clinerules（跟随仓库、Cline 维护）。本技能只存**简介+标签**与**指令偏好**。
+
+## When to Use
+- 用户下达任何需要在 Cline CLI 里执行的编码任务（写测试/重构/修 bug/出报告）
+- 需要在后台驱动 Cline 长任务并汇报进度
+- **不适用**：用户自己在 Cline TUI 里手工操作；非 Cline 的 agent（用 claude-code/codex/opencode 技能）
+
+## Prerequisites
+1. `cline --version` 可用（本环境要求 cline CLI v3.x、git、可用的 OpenAI-compatible LLM 端点、zsh 或 bash）；启动前探活 LLM 端点（具体端点/环境值见 `references/local-config.md`）
+2. 工程是 git 仓库且已切到任务分支
+3. **首次使用或 local-config.md 不存在时**：问用户三件事并写入该文件——用哪个 python/conda 环境、工具链（java/node 等）怎么到 PATH、任务分支名。
+
+## 环境铁律（所有开发类任务）
+Cline 进程必须在用户指定开发环境内启动（继承工具链），自检通过才启动：
+- 按 local-config.md 的启动模板执行（含脏 CONDA 栈清理）
+- 自检：python 指向指定环境 ／ 工具链版本 ／ `git branch --show-current` = 任务分支
+- conda 启动报错长文 = 初始化噪音，以最终 `env=<name>` 为准
+
+## 编排模式（二选一）
+**模式 1：非交互（默认）**——长 prompt 写文件注入，避免引号地狱：
+```bash
+cline --json "$(cat /tmp/task.md)"   # 后台 + 完成通知（terminal background=true notify=true）
+# 常用限制参数：--retries 6（默认）／ -t <秒> 超时 ／ --thinking high 仅疑难 ／ --compaction agentic（默认）
+# 长/隔夜： -z 后台hub  ／ 续跑： --id <session-id> "继续..." ／ 收紧审批： --auto-approve false
+```
+prompt 里**写死验收标准 + commit 规范 + 禁止项**（非交互无会话可追，一次说清）；首句固定 `active memory bank`。
+
+**模式 2：TUI 交互（仅短任务+需实时批准）**：`cline -i` + pty。
+实测陷阱：文本可写入，但**多行编辑器的单发回车提交不可靠**；非预期键可能弹订阅页（任意键关闭）。超过两三句的内容一律用模式 1。
+
+## 监控（确定性脚本优先）
+长任务后台跑时，优先跑 `scripts/session_report.py`（读会话消息流 + git/surefire 硬证据）：
+```bash
+python3 scripts/session_report.py            # 最新会话 + 当前目录证据
+python3 scripts/session_report.py 15 /path/to/repo
+```
+原则：**不信 Cline 自述，只信最终态证据**（git status/diff、surefire 数字、报告文件非空）。其次才看 PTY 输出。
+
+## 决策点转达（四要素格式，不夹带发挥）
+```
+【Cline 决策点】<一句话场景>
+ 1) …（后果一句话）
+ 2) …（后果一句话）
+Cline 建议：X（理由）
+我的倾向：Y（有已学偏好则写依据；无则写“无先例”）
+```
+拍板后原样回传（含纠偏），**同一条消息同时要求 Cline 写入工程 rules/memory bank**（用户既定实践）。
+
+## 验收清单（全绿才报完成）
+- [ ] `git status` / `diff --stat`：改动与声称一致、无越界文件
+- [ ] `git log -1`：commit 规范（含约定尾部）且**未 push**
+- [ ] 自己重跑关键命令（如 `mvn -pl <m> test`），对 surefire 数字
+- [ ] 覆盖率任务：读 jacoco/surefire 报告里的真实百分比
+- [ ] 报告/产物存在且非空（`wc -l` + 抽样首尾）
+- [ ] 临时工作区残留已清理（worktree + prune），或列入待办
+
+## 项目标签登记（首次接触问一句）
+端（后端/前端/全栈）× 生命周期（长护产品/短期项目）× 风险面（生产数据/对外服务 是/否）→ 记 `references/project-profiles.md`（**私有文件**）。不记架构、不记模块。
+
+## 学习回路（本技能的灵魂）
+1. 用户每次纠偏/拍板 → 记 `references/decision-log.md`（带**标签类**，**私有文件**）
+2. 同标签类 ≥2 个一致样本 → 蒸馏进下方【标签偏好区】，写成可执行短句
+3. 已有偏好直接应用，汇报时注明“按已学偏好执行：X”，给用户一次性否决机会
+
+## 标签偏好区（蒸馏后生效）
+（空——同标签类被确认/纠正 ≥2 次后起。格式例：“后端-长护-生产：关键设计点问一次，其余自动跑测试后报”）
+
+## Pitfalls（实测过）
+1. **TUI 回车被吞**：多行编辑器单发 Enter 提交不可靠；长 prompt 一律模式 1
+2. **脏 CONDA 栈**：会话继承的 SHLVL 错乱时 activate 必崩；先 unset CONDA_* 再 activate
+3. **process 发键参数名是 `data` 不是 `text`**；`bytes_written=0` 先 poll 看进程是否还活（raw 模式不回显）
+4. **自述完成 ≠ 完成**：子代理可能 token 耗尽/超时被重派（spawn 报错但后续轮又成功）——盯最终态证据
+5. Cline 主代理会自发多子代理 + worktree 并行：能力不错，但 worktree 落点要用 prompt 约束或事后清理
+6. 同一工程别 CLI 与代管两端同时推进会话——`~/.cline` 数据共享但运行时不共享
+7. 慢任务不要 kill——先 `session_report.py` + poll 确认在工作
+
+## Rules
+1. 首句固定 `active memory bank`（写进 prompt 首部）
+2. 默认模式 1 + 后台 + 完成通知；TUI 仅交互短任务
+3. 转达前查标签对应偏好区；无先例就忠实问
+4. 决策点走四要素格式；拍板回传必带“同步写 rules/memory”
+5. 硬约束（永远先问用户）：push / 删文件删目录 / 写数据库 / 装软件升级 / 花钱 / 改全局配置与密钥
+6. 结束后：新纠偏入 decision-log，够 2 次一致蒸馏进偏好区
