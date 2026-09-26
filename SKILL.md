@@ -1,7 +1,7 @@
 ---
 name: cline-pilot
 description: "Proxy Cline CLI tasks: dispatch, monitor, relay decisions."
-version: 2.2.0
+version: 2.3.1
 author: gongdear
 license: MIT
 metadata:
@@ -21,6 +21,7 @@ metadata:
 
 ## When to Use
 - 用户下达任何需要在 Cline CLI 里执行的编码任务（写测试/重构/修 bug/出报告）
+- 新项目冷启动：工程还没有 clinerules/memory-bank，需按 Cline 最佳实践初始化（见“冷启动流程”）
 - 需要在后台驱动 Cline 长任务并汇报进度
 - **不适用**：用户自己在 Cline TUI 里手工操作；非 Cline 的 agent（用 claude-code/codex/opencode 技能）
 
@@ -54,6 +55,15 @@ python3 scripts/session_report.py            # 最新会话 + 当前目录证据
 python3 scripts/session_report.py 15 /path/to/repo
 ```
 原则：**不信 Cline 自述，只信最终态证据**（git status/diff、surefire 数字、报告文件非空）。其次才看 PTY 输出。
+
+## 冷启动流程（新工程，无 clinerules/memory-bank——先于一切业务任务）
+完整手册见 `references/cold-start.md`，三步骨架：
+1. **前置核**：任何 memory bank 开启前先落**全局默认 memory-bank 提示词**（`assets/global-memory-bank-prompt.md` 逐字内容，写入 Cline 全局自定义指令层；已存在则核对一致）
+2. **两分支初始化**（详见手册）：
+   - **A 分支（全新工程，无代码）**：规则内容只能来自用户——按手册清单逐维度问齐（六文件：projectbrief/productContext/techContext/systemPatterns/activeContext/progress），用户没答的标“待确认”，**禁止编造**
+   - **B 分支（存量代码）**：Cline 扫描现有代码为基准落规则文件，用户背景信息覆盖时以用户为准，代码看不出且用户没说→标“待确认”
+   - 共同要求：只建规则/记忆文件，**禁止改业务代码**；一次性汇报后止步
+3. **停下等用户审阅**：他逐轮纠偏→同步要求 Cline 写回 rules/memory + 记 decision-log；确认后转正常转达工作流
 
 ## 决策点转达（四要素格式，不夹带发挥）
 ```
@@ -98,5 +108,6 @@ Cline 建议：X（理由）
 2. 默认模式 1 + 后台 + 完成通知；TUI 仅交互短任务
 3. 转达前查标签对应偏好区；无先例就忠实问
 4. 决策点走四要素格式；拍板回传必带“同步写 rules/memory”
-5. 硬约束（永远先问用户）：push / 删文件删目录 / 写数据库 / 装软件升级 / 花钱 / 改全局配置与密钥
-6. 结束后：新纠偏入 decision-log，够 2 次一致蒸馏进偏好区
+5. 冷启动（无 clinerules/memory-bank 的新工程）：先按“冷启动流程”完成初始化并汇报，**然后停下等指令，不顺手接业务任务**
+6. 硬约束（永远先问用户）：push / 删文件删目录 / 写数据库 / 装软件升级 / 花钱 / 改全局配置与密钥
+7. 结束后：新纠偏入 decision-log，够 2 次一致蒸馏进偏好区

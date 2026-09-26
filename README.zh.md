@@ -58,10 +58,12 @@ cline-pilot/
 ├── scripts/
 │   └── session_report.py             # 只读监控：会话消息 + git/surefire 硬证据（stdlib only，双语注释）
 ├── references/
+│   ├── cold-start.md                 # 冷启动手册（新工程：无 clinerules/memory-bank 时）
 │   ├── local-config.example.md       # 模板 → 私有的 local-config.md
 │   ├── project-profiles.example.md   # 模板 → 私有的 project-profiles.md
 │   └── decision-log.example.md       # 模板 → 私有的 decision-log.md
-└── assets/                           # 预留：prompt 模板等
+└── assets/
+    └── global-memory-bank-prompt.md  # 全局 memory-bank 提示词（逐字模板，开启任何 memory bank 前的前置核）
 ```
 
 `SKILL.md` 仅在激活时加载；`references/*` 按需读取；脚本是确定性代码——
@@ -69,6 +71,9 @@ agent 不必每次即兴发挥监控逻辑。
 
 ## 设计原则
 
+- **冷启动前置核**——任何 memory bank 开启前，全局必须已有默认 memory-bank 提示词
+  （`assets/global-memory-bank-prompt.md`，逐字模板）
+- **新工程分两路**——无代码：规则逐维度问用户后落盘；有存量代码：以扫描代码为基准落文件
 - **技能里不记架构**——项目技术事实归工程自己的 memory bank / clinerules；
   本技能只存简介 + 标签 + 已学偏好
 - **确定性优先**——凡是"每次都必须对"的步骤，用脚本而非让模型每次现编

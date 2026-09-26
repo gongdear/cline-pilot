@@ -61,10 +61,12 @@ cline-pilot/
 ├── scripts/
 │   └── session_report.py             # read-only monitor: session messages + git/surefire evidence (stdlib only)
 ├── references/
+│   ├── cold-start.md                 # cold-start handbook (new projects: no clinerules/memory-bank)
 │   ├── local-config.example.md       # template → private local-config.md
 │   ├── project-profiles.example.md   # template → private project-profiles.md
 │   └── decision-log.example.md       # template → private decision-log.md
-└── assets/                           # reserved for prompt templates etc.
+└── assets/
+    └── global-memory-bank-prompt.md  # verbatim global memory-bank prompt (must be in place before any memory bank)
 ```
 
 `SKILL.md` loads only when activated; `references/*` on demand; the script is
@@ -72,6 +74,11 @@ deterministic code — the agent doesn't improvise monitoring each time.
 
 ## Design principles
 
+- **Cold-start gate** — before any memory bank is activated, the default global
+  memory-bank prompt must already be in place (`assets/global-memory-bank-prompt.md`,
+  verbatim template)
+- **Two cold-start paths** — no code yet: rules are assembled by asking the user
+  dimension by dimension; legacy code: rules are grounded in a code scan
 - **No architecture in the skill** — project technical facts belong to the project's
   memory bank / clinerules; the skill holds intro + tags + learned preferences only
 - **Deterministic first** — anything that must be right every time is a script, not a
