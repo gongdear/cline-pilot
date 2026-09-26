@@ -1,7 +1,7 @@
 ---
 name: cline-pilot
 description: "Proxy Cline CLI tasks: dispatch, monitor, relay decisions."
-version: 0.2.3
+version: 0.2.4
 author: gongdear
 license: MIT
 metadata:
@@ -116,4 +116,6 @@ Cline 建议：X（理由）
 5. 冷启动（无 clinerules/memory-bank 的新工程）：先按“冷启动流程”完成初始化并汇报，**然后停下等指令，不顺手接业务任务**
 6. 硬约束（永远先问用户）：push / 删文件删目录 / 写数据库 / 装软件升级 / 花钱 / 改全局配置与密钥
 7. 结束后：新纠偏入 decision-log，够 2 次一致蒸馏进偏好区
-8. 写任务书前必查 `references/project-profiles.md` 该工程的**工程级特殊要求**并逐条显式写进任务书（如 ForIM：禁止并行 worktree 多任务、逐模块串行；单步命令 ≤300s）。工程级约束优先级高于本技能通用流程——并行/子代理等通用行为若与工程约束冲突，**以工程约束为准**
+8. **后台进程台账（铁律，用户 2026-09-26 定，用本skill拉起的任何后台进程必须遵守）**：登记是**启动流程的一部分**，不是事后补记——顺序是：`启动前建台账行(pid待填)` → `启动后30s内回填真实pid/会话id` → `退出/结束/被kill时更新状态列`。**未登记 = 未启动**（禁止先启后补）。台账单文件：`~/.hermes/cache/scratch/bg-procs.md`（追加式，历史不清）：一行一条 `时间 | pid(含伴随daemon) | 会话id | 目的 | 状态`。**查杀决策清单**（kill 前逐项过）：①目的列写明在干什么 → ②会话 `~/.cline/data/sessions/<id>` 最后活动时间是否已结束 → ③是否还有 nohup 子进程（mvn等）挂在其下未跑完 → ④是孤儿 daemon 还是活跃会话配套（比对 `--cwd` + 启动时间）。四项都确认无活活体才 kill。特别地：**每个 cline 会话会自带一个 `cline-hub-daemon --cwd <工程>`（孤儿化到 launchd，会话结束后可能残留）** —— 活跃会话的 daemon 绝不可杀
+9. **`session not found` 崩溃（实测 2026-09-26）**：每个 cline 会话带一个 `cline-hub-daemon`（孤儿化到 launchd）；daemon 重启/被杀后 hub 会话注册表丢失，运行中会话直接崩。处置：先清 daemon 再启新会话开新对话；崩溃前已挂出的 nohup 子进程（如 mvn）会独立存活，先等其跑完再盘点。
+10. 写任务书前必查 `references/project-profiles.md` 该工程的**工程级特殊要求**并逐条显式写进任务书（如 ForIM：禁止并行 worktree 多任务、逐模块串行；单步命令 ≤300s）。工程级约束优先级高于本技能通用流程——并行/子代理等通用行为若与工程约束冲突，**以工程约束为准**
