@@ -9,7 +9,7 @@ Without proper documentation, you cannot function effectively.
 
 ## Memory Bank Files
 
-Critical: if `cline_docs/` or any of these files do not exist, create them immediately
+Critical: if `memory-bank/` or any of these files do not exist, create them immediately
 by following these steps:
 
 1. Read all available documentation
@@ -39,7 +39,7 @@ by following these steps:
 3. Read all files before continuing
 4. Verify you have full context
 5. Begin development. After initializing the memory bank at the start of a task, do
-   not update cline_docs.
+   not update memory-bank.
 
 ### During Development
 

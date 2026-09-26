@@ -58,7 +58,7 @@ python3 scripts/session_report.py 15 /path/to/repo
 
 ## 冷启动流程（新工程，无 clinerules/memory-bank——先于一切业务任务）
 完整手册见 `references/cold-start.md`，三步骨架：
-1. **前置核（先于任何 memory bank 开启）**：检查全局默认 memory-bank 提示词是否已配置（grep `~/.cline` 全局配置/自定义指令，找 `记忆库`/`Memory Bank` 关键词 + `cline_docs` 结构约定）：
+1. **前置核（先于任何 memory bank 开启）**：检查全局默认 memory-bank 提示词是否已配置（grep `~/.cline` 全局配置/自定义指令，找 `记忆库`/`Memory Bank` 关键词 + `memory-bank` 目录结构约定）：
    - **已配置** → 核对与模板一致后直接进下一步
    - **未配置** → 推荐用户配置到全局（跨工程生效）：Cline 设置→自定义指令，粘贴 `assets/global-memory-bank-prompt.md`（英文用户/英文工程用 `global-memory-bank-prompt.en.md`）全文；给用户完整操作话术
    - **用户暂不全局配置也要开工** → 降级为**注入模式**：把所选语言版提示词全文直接写进本次 prompt 上下文，**然后再接 `active memory bank`**（顺序不可反过来）

@@ -39,7 +39,7 @@ python -c "import os,json;d=json.load(open(os.path.expanduser('~/.cline/data/glo
 
 ### 交给 Cline 的任务书要点
 - 先写全局提示词核（前置硬前提）
-- 再建工程级 `.clinerules` + `cline_docs/`（六文件），**内容逐条来自上面的用户回答**，用户没答的标“待确认”，禁止填充想象中的规范
+- 再建工程级 `.clinerules` + `memory-bank/`（六文件），**内容逐条来自上面的用户回答**，用户没答的标“待确认”，禁止填充想象中的规范
 - 只建规则/记忆文件，不产业务代码；一次性汇报后止步
 
 ## 分支 B：存量代码工程
@@ -48,7 +48,7 @@ python -c "import os,json;d=json.load(open(os.path.expanduser('~/.cline/data/glo
 ### 交给 Cline 的任务书要点
 - 先写全局提示词核（前置硬前提）
 - 全量扫描现有代码：架构/模块划分/技术栈/既有命名与错误处理/测试现状/构建与分支约定
-- 依据代码事实落 `.clinerules` + `cline_docs/` 六文件；用户提供的偏好（背景、习惯、约束）覆盖同冲突项时以用户为准
+- 依据代码事实落 `.clinerules` + `memory-bank/` 六文件；用户提供的偏好（背景、习惯、约束）覆盖同冲突项时以用户为准
 - 代码里看不出来且用户没说的 → 标“待确认”
 - 只改规则/记忆文件，**禁止顺手重构业务代码**；一次性汇报后止步
 
