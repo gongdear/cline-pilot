@@ -105,6 +105,8 @@ Cline 建议：X（理由）
 5. Cline 主代理会自发多子代理 + worktree 并行：能力不错，但 worktree 落点要用 prompt 约束或事后清理
 6. 同一工程别 CLI 与代管两端同时推进会话——`~/.cline` 数据共享但运行时不共享
 7. 慢任务不要 kill——先 `session_report.py` + poll 确认在工作
+8. **`Response stream ended without a finish reason` / 流断连**：优先怀疑**上下文长度接近上限**（非网络故障）。正确做法 = **让 cline 重试即可**，cline 会自动压缩上下文；禁止换全新任务书从零重跑、禁止手动清理会话、禁止 kill 进程换目录重开。非交互模式：再发一条简短继续提示（以磁盘现状为准盘点）；TUI：直接让它继续
+9. **`operation timed out` 但迭代数很多**：多为单步长操作（全仓 mvn / 大批量写入）触发，不是进程挂死；任务书加单步上限（每命令 ≤300s、禁止全仓一次跑）；同样续跑不重跑
 
 ## Rules
 1. 首句固定 `active memory bank`（写进 prompt 首部）
