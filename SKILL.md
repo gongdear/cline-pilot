@@ -1,7 +1,7 @@
 ---
 name: cline-pilot
 description: "Proxy Cline CLI tasks: dispatch, monitor, relay decisions."
-version: 0.2.2
+version: 0.2.3
 author: gongdear
 license: MIT
 metadata:
@@ -116,3 +116,4 @@ Cline 建议：X（理由）
 5. 冷启动（无 clinerules/memory-bank 的新工程）：先按“冷启动流程”完成初始化并汇报，**然后停下等指令，不顺手接业务任务**
 6. 硬约束（永远先问用户）：push / 删文件删目录 / 写数据库 / 装软件升级 / 花钱 / 改全局配置与密钥
 7. 结束后：新纠偏入 decision-log，够 2 次一致蒸馏进偏好区
+8. 写任务书前必查 `references/project-profiles.md` 该工程的**工程级特殊要求**并逐条显式写进任务书（如 ForIM：禁止并行 worktree 多任务、逐模块串行；单步命令 ≤300s）。工程级约束优先级高于本技能通用流程——并行/子代理等通用行为若与工程约束冲突，**以工程约束为准**
