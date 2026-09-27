@@ -1,15 +1,1 @@
-# private per-machine state (contains your own env/endpoints/paths)
-references/local-config.md
-references/project-profiles.md
-references/decision-log.md
-
-# never ship secrets
-.env
-*.env
-
-# OS / tooling noise
-.DS_Store
-__pycache__/
-*.pyc
-*.bak
-*.swp
+scratch/
