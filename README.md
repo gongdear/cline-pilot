@@ -90,6 +90,35 @@ deterministic code — the agent doesn't improvise monitoring each time.
 - **Privacy by layer** — public files (SKILL.md, scripts, templates) carry zero
   user-specific secrets; private state stays in git-ignored `references/*.md`
 
+## Best practice: two-tier model strategy
+
+Cline's cost/quality balance changes dramatically between the **cold-start** and the
+**steady-state** phases. Recommended setup (validated on a production Java backend):
+
+1. **Initialization — use a strong long-context (paid) model.**
+   Give it the full weight: whole-project codebase scan, writing project rules
+   (`clinerules` / memory-bank seed) grounded in what the code actually does, and
+   authoring one or two **template test/code patterns** representative of the
+   project (assertion style, mock granularity, naming, edge-case coverage).
+   This phase is read-heavy and long-context-heavy — exactly where frontier
+   models pay for themselves. A single good cold start prevents most
+   rework later: every batch after it is constrained by the rules it wrote.
+
+2. **Steady state — switch to a small local model for the task loop.**
+   Once the rules + templates exist, each batch is a small, tightly-scoped
+   task with an explicit spec (target class, test file path, mock list,
+   assertion requirements). That shape is ideal for a local, low-parameter
+   model: the skill's task-spec granularity, the anti-hallucination protocol,
+   and per-batch verification carry the discipline, so model quality can be
+   traded against cost/privacy/throughput. (The maintainer runs
+   `qwen3.8:27b` locally via Ollama for all batch execution — 50+ test
+   classes delivered against a 7-module Java backend on that setup.)
+
+Rule of thumb: **frontier model buys the rules once; the local model runs the
+discipline every day.** If a local batch fails the same assertion 3 times in a
+row, that is a signal the template/rules are the gap — escalate *that batch*
+back to the stronger model, don't keep burning local retries.
+
 ## Validate
 
 ```bash
