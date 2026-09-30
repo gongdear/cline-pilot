@@ -1,7 +1,7 @@
 ---
 name: cline-pilot
 description: "Proxy Cline CLI tasks: dispatch, monitor, relay decisions."
-version: 0.3.6
+version: 0.3.7
 author: gongdear
 license: MIT
 metadata:
@@ -26,7 +26,7 @@ metadata:
 - **不适用**：用户自己在 Cline TUI 里手工操作；非 Cline 的 agent（用 claude-code/codex/opencode 技能）
 
 ## Prerequisites
-1. `cline --version` 可用（本环境要求 cline CLI v3.x、git、可用的 OpenAI-compatible LLM 端点、zsh 或 bash）；启动前探活 LLM 端点（具体端点/环境值见 `references/local-config.md`）
+1. `cline --version` 可用（本环境要求 cline CLI v3.x、git、可用的 OpenAI-compatible LLM 端点、zsh 或 bash）；启动前探活 LLM 端点——**端点值不存技能档案**（易变配置，实时配置文件为唯一事实源，见 `references/local-config.md` 的 LLM 端点节）
 2. 工程是 git 仓库且已切到任务分支
 3. **首次使用或 local-config.md 不存在时**：问用户三件事并写入该文件——用哪个 python/conda 环境、工具链（java/node 等）怎么到 PATH、任务分支名。
 
@@ -68,7 +68,7 @@ prompt 里**写死验收标准 + commit 规范 + 禁止项**（非交互无会�
 **两个合法时机**：
 1. **小任务阶段完成时**（验收通过后的自然断点，下一个任务启动前）——不打断正在运行的进程，不为更规则而 kill/插入
 2. **严重错误紧急叫停时**（幻觉自毁、连续失败、数据风险等）——顺序固定：**先更新 clinerules（经用户批准）→ 再重试/继续**；规则先于重试，禁止"先重跑再看"
-规则内容要求：可执行短句、禁止项与优先做法成对出现（仿防幻觉硬协议体例）；cline 落盘后由编排侧只读核证规则文件已实际更新，再交下一个任务。
+规则内容要求：可执行短句、禁止项与优先做法成对出现（仿防幻觉硬协议体例）；**clinerules 的维护权归 cline**：编排者（cline-pilot）与任何外部进程/工具对工程 `.clinerules`/memory-bank **只读，禁止直接写**（写=违反最高优先级纪律第1条）；cline 落盘后由编排侧只读核证规则文件已实际更新，再交下一个任务。
 
 ## 异常通报纪律（用户 2026-09-27 定）
 1. 正常运行中**不打扰**用户；异常经处理/重试后恢复正常的也**不打扰**。
