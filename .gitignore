@@ -1,1 +1,41 @@
+# macOS
+.DS_Store
+.DS_Store.*
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+
+# Linux
+.directory
+*~
+
+# Editors / IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Runtime / logs
+*.log
+*.tmp
+*.pyc
+__pycache__/
+node_modules/
+
+# 私有运行时档案（技能私有文件，绝不入库）
 scratch/
+references/decision-log.md
+references/local-config.md
+references/project-profiles.md
+*.local.md
+
+# Env / secrets
+.env
+*.key
