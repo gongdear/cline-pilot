@@ -93,7 +93,8 @@ deterministic code — the agent doesn't improvise monitoring each time.
 ## Best practice: two-tier model strategy
 
 Cline's cost/quality balance changes dramatically between the **cold-start** and the
-**steady-state** phases. Recommended setup (validated on a production Java backend):
+**steady-state** phases. Recommended setup (maintainer-validated on a real
+multi-module production backend):
 
 1. **Initialization — use a strong long-context (paid) model.**
    Give it the full weight: whole-project codebase scan, writing project rules
@@ -108,11 +109,10 @@ Cline's cost/quality balance changes dramatically between the **cold-start** and
    Once the rules + templates exist, each batch is a small, tightly-scoped
    task with an explicit spec (target class, test file path, mock list,
    assertion requirements). That shape is ideal for a local, low-parameter
-   model: the skill's task-spec granularity, the anti-hallucination protocol,
-   and per-batch verification carry the discipline, so model quality can be
-   traded against cost/privacy/throughput. (The maintainer runs
-   `qwen3.8:27b` locally via Ollama for all batch execution — 50+ test
-   classes delivered against a 7-module Java backend on that setup.)
+   model (any open model in the ~30B class works; the maintainer runs a
+   local Qwen-class build via Ollama): the skill's task-spec granularity, the
+   anti-hallucination protocol, and per-batch verification carry the
+   discipline, so model quality can be traded against cost/privacy/throughput.
 
 Rule of thumb: **frontier model buys the rules once; the local model runs the
 discipline every day.** If a local batch fails the same assertion 3 times in a
